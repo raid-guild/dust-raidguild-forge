@@ -1,9 +1,0 @@
-{
-  "$schema": "https://esm.sh/pr/dustproject/dust/dustkit@ac7725c/json-schemas/app-config.json",
-  "name": "RaidGuild Forge",
-  "startUrl": "/",
-  "defaultSize": {
-    "width": 800,
-    "height": 1000
-  }
-} 
