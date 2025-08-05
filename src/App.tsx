@@ -1024,6 +1024,29 @@ export function App() {
             }}>
               ➕ Add New Waypoint
             </h3>
+            
+            {/* Waypoint Note */}
+            <div style={{ 
+              backgroundColor: "#3a2a3a", 
+              padding: "12px", 
+              borderRadius: "8px", 
+              marginBottom: "20px",
+              border: "1px solid #9C27B0",
+              borderLeft: "4px solid #FF9800"
+            }}>
+              <p style={{ 
+                margin: "0", 
+                fontSize: "13px", 
+                color: "#FFD700",
+                fontWeight: "500",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px"
+              }}>
+                <span style={{ fontSize: "16px" }}>⚠️</span>
+                <span>Currently, only placed blocks/objects can act as waypoints. Natural terrain and other entities are not supported.</span>
+              </p>
+            </div>
            
            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px", marginBottom: "15px" }}>
              <input
