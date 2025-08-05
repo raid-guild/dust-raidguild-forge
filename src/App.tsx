@@ -384,7 +384,7 @@ export function App() {
         
         // Round coordinates to integers for MUD query (quadrant system - round to next block for negatives)
         const roundedX = x < 0 ? Math.floor(x) : Math.round(x);
-        const roundedY = y < 0 ? Math.floor(y) : Math.round(y);
+        const roundedY = y < 0 ? Math.floor(y) - 1 : Math.round(y) - 1; // -1 to account for the fact that the player is in the block below the cursor
         const roundedZ = z < 0 ? Math.floor(z) : Math.round(z);
         console.log(`✅ Rounded position: ${roundedX}, ${roundedY}, ${roundedZ}`);
         
@@ -918,24 +918,7 @@ export function App() {
           </p>
           
           <div style={{ display: "flex", gap: "15px", marginBottom: "20px" }}>
-            <button
-              onClick={getPlayerPositionEntity}
-              disabled={playerPositionLoading}
-              style={{ 
-                padding: "12px 20px", 
-                backgroundColor: playerPositionLoading ? "#666" : "#4CAF50", 
-                color: "white", 
-                border: "none", 
-                borderRadius: "8px",
-                cursor: playerPositionLoading ? "not-allowed" : "pointer",
-                fontSize: "14px",
-                fontWeight: "500",
-                transition: "all 0.2s ease",
-                boxShadow: playerPositionLoading ? "none" : "0 2px 4px rgba(76, 175, 80, 0.3)"
-              }}
-            >
-              {playerPositionLoading ? "⏳ Loading..." : "🎯 Get Entity at Player Position"}
-            </button>
+
             <button
               onClick={getCursorPositionEntity}
               disabled={cursorPositionLoading}
@@ -953,6 +936,24 @@ export function App() {
               }}
             >
               {cursorPositionLoading ? "⏳ Loading..." : "🖱️ Get Entity at Cursor Position"}
+            </button>
+            <button
+              onClick={getPlayerPositionEntity}
+              disabled={playerPositionLoading}
+              style={{ 
+                padding: "12px 20px", 
+                backgroundColor: playerPositionLoading ? "#666" : "#4CAF50", 
+                color: "white", 
+                border: "none", 
+                borderRadius: "8px",
+                cursor: playerPositionLoading ? "not-allowed" : "pointer",
+                fontSize: "14px",
+                fontWeight: "500",
+                transition: "all 0.2s ease",
+                boxShadow: playerPositionLoading ? "none" : "0 2px 4px rgba(76, 175, 80, 0.3)"
+              }}
+            >
+              {playerPositionLoading ? "⏳ Loading..." : "🎯 Get Entity at Block Below Player Position"}
             </button>
           </div>
 
