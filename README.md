@@ -93,4 +93,4 @@ The app integrates with the Dust world and uses the MUD indexer for queries. Mak
 
 ## License
 
-This project is part of the RaidGuild ecosystem. 
+This project is part of the RaidGuild ecosystem. # Updated for Vercel deployment
