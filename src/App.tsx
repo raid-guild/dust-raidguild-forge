@@ -367,6 +367,90 @@ export function App() {
   //   }
   // };
 
+  // Helper function to get entity at position with fallback to terrain
+  const getEntityAtPositionWithFallback = async (x: number, y: number, z: number) => {
+    console.log(`🔍 Looking for entity at position: ${x}, ${y}, ${z}`);
+    
+    // First, try to find a placed entity at this position
+    const placedEntityQuery = `SELECT "entityId" FROM "EntityPosition" WHERE "x" = '${x}' AND "y" = '${y}' AND "z" = '${z}' LIMIT 1`;
+    
+    const placedEntityResponse = await fetch("https://indexer.mud.redstonechain.com/q", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify([{ query: placedEntityQuery, address: "0x253eb85B3C953bFE3827CC14a151262482E7189C" }]),
+    });
+
+    if (placedEntityResponse.ok) {
+      const placedEntityData = await placedEntityResponse.json() as any;
+      const placedEntityResult = Array.isArray(placedEntityData) ? placedEntityData[0] : placedEntityData;
+      
+      if (placedEntityResult.result && placedEntityResult.result.length > 0 && placedEntityResult.result[0] && placedEntityResult.result[0].length > 1) {
+        const headers = placedEntityResult.result[0][0];
+        const dataRow = placedEntityResult.result[0][1];
+        const entityIdIndex = headers.findIndex((header: string) => header === 'entityId');
+        
+        if (entityIdIndex !== -1 && dataRow[entityIdIndex]) {
+          const entityId = dataRow[entityIdIndex];
+          console.log("🎯 Found placed entity:", entityId);
+          return { entityId, type: 'placed' };
+        }
+      }
+    }
+    
+    // If no placed entity found, try to get the terrain block entity ID
+    // According to Dust docs, we need to encode the block position
+    console.log("🏔️ No placed entity found, checking terrain...");
+    
+    // Create properly encoded entity ID for terrain blocks
+    // Format: 0x03 + 4 bytes x + 4 bytes y + 4 bytes z + 8 bytes padding
+    // Handle negative coordinates by using two's complement
+    const encodeCoord = (coord: number): string => {
+      if (coord >= 0) {
+        return coord.toString(16).padStart(8, '0');
+      } else {
+        // For negative numbers, use two's complement (32-bit)
+        const positive = Math.abs(coord);
+        const complement = (0x100000000 - positive).toString(16).padStart(8, '0');
+        return complement;
+      }
+    };
+    
+    // The working example has exactly 32 hex chars after 0x03: 8+8+8+8 = 32 chars
+    const terrainEntityId = `0x03${encodeCoord(x)}${encodeCoord(y)}${encodeCoord(z)}00000000000000000000000000000000000000`;
+    console.log(`🔧 Generated terrain entity ID: ${terrainEntityId}`);
+    console.log(`🔧 Coordinates: x=${x} (${encodeCoord(x)}), y=${y} (${encodeCoord(y)}), z=${z} (${encodeCoord(z)})`);
+    
+    // Query EntityObjectType to see if this terrain block has been modified
+    const terrainQuery = `SELECT "objectType" FROM "EntityObjectType" WHERE "entityId" = '${terrainEntityId}' LIMIT 1`;
+    
+    const terrainResponse = await fetch("https://indexer.mud.redstonechain.com/q", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify([{ query: terrainQuery, address: "0x253eb85B3C953bFE3827CC14a151262482E7189C" }]),
+    });
+
+    if (terrainResponse.ok) {
+      const terrainData = await terrainResponse.json() as any;
+      const terrainResult = Array.isArray(terrainData) ? terrainData[0] : terrainData;
+      
+      if (terrainResult.result && terrainResult.result.length > 0 && terrainResult.result[0] && terrainResult.result[0].length > 1) {
+        const headers = terrainResult.result[0][0];
+        const dataRow = terrainResult.result[0][1];
+        const objectTypeIndex = headers.findIndex((header: string) => header === 'objectType');
+        
+        if (objectTypeIndex !== -1 && dataRow[objectTypeIndex]) {
+          const objectType = dataRow[objectTypeIndex];
+          console.log("🏔️ Found modified terrain block:", terrainEntityId, "with object type:", objectType);
+          return { entityId: terrainEntityId, type: 'terrain' };
+        }
+      }
+    }
+    
+    // If we get here, it's likely natural terrain (grass, stone, etc.)
+    console.log("🏔️ Found natural terrain block");
+    return { entityId: terrainEntityId, type: 'natural' };
+  };
+
   const getPlayerPositionEntity = async () => {
     setPlayerPositionLoading(true);
     setPlayerPosition("");
@@ -388,67 +472,13 @@ export function App() {
         const roundedZ = z < 0 ? Math.floor(z) : Math.round(z);
         console.log(`✅ Rounded position: ${roundedX}, ${roundedY}, ${roundedZ}`);
         
-        // Query MUD to find entity at this position
-        const query = `SELECT "entityId" FROM "EntityPosition" WHERE "x" = '${roundedX}' AND "y" = '${roundedY}' AND "z" = '${roundedZ}' LIMIT 1`;
-        setMudQuery(query);
+        // Use the new fallback function
+        const { entityId, type } = await getEntityAtPositionWithFallback(roundedX, roundedY, roundedZ);
         
-        // Execute the query automatically
-        const response = await fetch("https://indexer.mud.redstonechain.com/q", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify([
-            {
-              query: query,
-              address: "0x253eb85B3C953bFE3827CC14a151262482E7189C",
-            }
-          ]),
-        });
-
-        if (response.ok) {
-          const data = await response.json() as any;
-          console.log("📊 Raw MUD response:", data);
-          
-          const result = Array.isArray(data) ? data[0] : data;
-          console.log("📊 Processed result:", result);
-          
-          if (result.error) {
-            console.log("❌ Result error:", result.error);
-            setPlayerPosition(`Error: ${result.error}`);
-            return;
-          }
-          
-          // MUD API returns data in result.result[0] array format
-          // result.result[0][0] = headers, result.result[0][1] = data
-          if (result.result && result.result.length > 0 && result.result[0] && result.result[0].length > 1) {
-            const headers = result.result[0][0];
-            const dataRow = result.result[0][1];
-            console.log("📊 Headers:", headers);
-            console.log("📊 Data row:", dataRow);
-            
-            // Find the entityId column index
-            const entityIdIndex = headers.findIndex((header: string) => header === 'entityId');
-            if (entityIdIndex !== -1 && dataRow[entityIdIndex]) {
-              const entityId = dataRow[entityIdIndex];
-              console.log("🎯 Found entity ID:", entityId);
-              setPlayerPosition(entityId);
-              setNewWaypoint(prev => ({ ...prev, entityId }));
-              console.log(`✅ Found entity at player position: ${entityId}`);
-            } else {
-              console.log("❌ No entityId found in data");
-              setPlayerPosition("No entity found at position");
-            }
-          } else {
-            console.log("❌ No data in result.result[0]");
-            setPlayerPosition("No entity found at position");
-          }
-        } else {
-          console.log("❌ Response not OK:", response.status, response.statusText);
-          const errorText = await response.text();
-          console.log("❌ Error response:", errorText);
-          setPlayerPosition(`Error: ${response.status} ${response.statusText}`);
-        }
+        setPlayerPosition(`${entityId} (${type})`);
+        setNewWaypoint(prev => ({ ...prev, entityId }));
+        console.log(`✅ Found entity at player position: ${entityId} (${type})`);
+        
       }
     } catch (error) {
       console.error("❌ Error getting player position:", error);
@@ -477,67 +507,13 @@ export function App() {
         const roundedZ = z < 0 ? Math.floor(z) : Math.round(z);
         console.log(`✅ Rounded cursor position: ${roundedX}, ${roundedY}, ${roundedZ}`);
         
-        // Query MUD to find entity at this position
-        const query = `SELECT "entityId" FROM "EntityPosition" WHERE "x" = '${roundedX}' AND "y" = '${roundedY}' AND "z" = '${roundedZ}' LIMIT 1`;
-        setMudQuery(query);
+        // Use the new fallback function
+        const { entityId, type } = await getEntityAtPositionWithFallback(roundedX, roundedY, roundedZ);
         
-        // Execute the query automatically
-        const response = await fetch("https://indexer.mud.redstonechain.com/q", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify([
-            {
-              query: query,
-              address: "0x253eb85B3C953bFE3827CC14a151262482E7189C",
-            }
-          ]),
-        });
-
-        if (response.ok) {
-          const data = await response.json() as any;
-          console.log("📊 Raw MUD response (cursor):", data);
-          
-          const result = Array.isArray(data) ? data[0] : data;
-          console.log("📊 Processed result (cursor):", result);
-          
-          if (result.error) {
-            console.log("❌ Result error (cursor):", result.error);
-            setCursorPosition(`Error: ${result.error}`);
-            return;
-          }
-          
-          // MUD API returns data in result.result[0] array format
-          // result.result[0][0] = headers, result.result[0][1] = data
-          if (result.result && result.result.length > 0 && result.result[0] && result.result[0].length > 1) {
-            const headers = result.result[0][0];
-            const dataRow = result.result[0][1];
-            console.log("📊 Headers (cursor):", headers);
-            console.log("📊 Data row (cursor):", dataRow);
-            
-            // Find the entityId column index
-            const entityIdIndex = headers.findIndex((header: string) => header === 'entityId');
-            if (entityIdIndex !== -1 && dataRow[entityIdIndex]) {
-              const entityId = dataRow[entityIdIndex];
-              console.log("🎯 Found entity ID (cursor):", entityId);
-              setCursorPosition(entityId);
-              setNewWaypoint(prev => ({ ...prev, entityId }));
-              console.log(`✅ Found entity at cursor position: ${entityId}`);
-            } else {
-              console.log("❌ No entityId found in data (cursor)");
-              setCursorPosition("No entity found at position");
-            }
-          } else {
-            console.log("❌ No data in result.result[0] (cursor)");
-            setCursorPosition("No entity found at position");
-          }
-        } else {
-          console.log("❌ Response not OK (cursor):", response.status, response.statusText);
-          const errorText = await response.text();
-          console.log("❌ Error response (cursor):", errorText);
-          setCursorPosition(`Error: ${response.status} ${response.statusText}`);
-        }
+        setCursorPosition(`${entityId} (${type})`);
+        setNewWaypoint(prev => ({ ...prev, entityId }));
+        console.log(`✅ Found entity at cursor position: ${entityId} (${type})`);
+        
       }
     } catch (error) {
       console.error("❌ Error getting cursor position:", error);
@@ -893,136 +869,7 @@ export function App() {
           </div>
         )}
 
-        {/* Quick Position Tools */}
-        <div style={{ 
-          backgroundColor: "#2a2a2a", 
-          padding: "20px", 
-          borderRadius: "12px", 
-          marginBottom: "25px",
-          border: "1px solid #4CAF50",
-          boxShadow: "0 4px 6px rgba(0,0,0,0.1)"
-        }}>
-                          <h3 style={{ 
-                  color: "#ffffff", 
-                  marginBottom: "15px", 
-                  fontSize: "20px",
-                  fontWeight: "bold",
-                  textShadow: "2px 2px 4px rgba(0,0,0,0.5)",
-                  borderBottom: "2px solid #4CAF50",
-                  paddingBottom: "5px"
-                }}>
-                  📍 Quick Position Tools
-                </h3>
-          <p style={{ color: "#ccc", fontSize: "14px", marginBottom: "20px", lineHeight: "1.5" }}>
-            Get entity IDs at your current position or cursor position automatically! No need to manually query the database.
-          </p>
-          
-          <div style={{ display: "flex", gap: "15px", marginBottom: "20px" }}>
 
-            <button
-              onClick={getCursorPositionEntity}
-              disabled={cursorPositionLoading}
-              style={{ 
-                padding: "12px 20px", 
-                backgroundColor: cursorPositionLoading ? "#666" : "#2196F3", 
-                color: "white", 
-                border: "none", 
-                borderRadius: "8px",
-                cursor: cursorPositionLoading ? "not-allowed" : "pointer",
-                fontSize: "14px",
-                fontWeight: "500",
-                transition: "all 0.2s ease",
-                boxShadow: cursorPositionLoading ? "none" : "0 2px 4px rgba(33, 150, 243, 0.3)"
-              }}
-            >
-              {cursorPositionLoading ? "⏳ Loading..." : "🖱️ Get Entity at Cursor Position"}
-            </button>
-            <button
-              onClick={getPlayerPositionEntity}
-              disabled={playerPositionLoading}
-              style={{ 
-                padding: "12px 20px", 
-                backgroundColor: playerPositionLoading ? "#666" : "#4CAF50", 
-                color: "white", 
-                border: "none", 
-                borderRadius: "8px",
-                cursor: playerPositionLoading ? "not-allowed" : "pointer",
-                fontSize: "14px",
-                fontWeight: "500",
-                transition: "all 0.2s ease",
-                boxShadow: playerPositionLoading ? "none" : "0 2px 4px rgba(76, 175, 80, 0.3)"
-              }}
-            >
-              {playerPositionLoading ? "⏳ Loading..." : "🎯 Get Entity at Block Below Player Position"}
-            </button>
-          </div>
-
-                      {/* Waypoint Note */}
-                      <div style={{ 
-              backgroundColor: "#3a2a3a", 
-              padding: "12px", 
-              borderRadius: "8px", 
-              marginBottom: "20px",
-              border: "1px solid #9C27B0",
-              borderLeft: "4px solid #FF9800"
-            }}>
-              <p style={{ 
-                margin: "0", 
-                fontSize: "13px", 
-                color: "#FFD700",
-                fontWeight: "500",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px"
-              }}>
-                <span style={{ fontSize: "16px" }}>⚠️</span>
-                <span>Currently, only placed blocks/objects can act as waypoints. Natural terrain and other entities are not supported.</span>
-              </p>
-            </div>
-           
-
-          {(playerPosition || cursorPosition) && (
-            <div style={{ 
-              backgroundColor: "#2a2a2a", 
-              padding: "15px", 
-              borderRadius: "8px", 
-              fontSize: "14px", 
-              color: "#ccc",
-              border: "1px solid #4CAF50"
-            }}>
-              {playerPosition && (
-                <p style={{ marginBottom: "8px" }}><strong>🎯 Player Position:</strong> <code style={{ backgroundColor: "#1a1a1a", color: "#ffffff", padding: "2px 6px", borderRadius: "4px" }}>{playerPosition}</code></p>
-              )}
-              {cursorPosition && (
-                <p style={{ marginBottom: "8px" }}><strong>🖱️ Cursor Position:</strong> <code style={{ backgroundColor: "#1a1a1a", color: "#ffffff", padding: "2px 6px", borderRadius: "4px" }}>{cursorPosition}</code></p>
-              )}
-              <p style={{ color: "#4CAF50", fontSize: "13px", margin: 0, fontWeight: "500" }}>
-                ✅ Entity ID automatically added to the waypoint form below!
-              </p>
-            </div>
-          )}
-
-          <div style={{ 
-            backgroundColor: "#2a2a2a", 
-            padding: "15px", 
-            borderRadius: "8px", 
-            fontSize: "13px", 
-            color: "#888",
-            marginTop: "20px"
-          }}>
-            <p style={{ marginBottom: "10px", fontWeight: "600", color: "#ccc" }}>💡 How it works:</p>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px" }}>
-              <div>
-                <p style={{ marginBottom: "5px" }}><strong>🎯 Player Position:</strong></p>
-                <p style={{ fontSize: "12px", lineHeight: "1.4" }}>Gets your current coordinates and finds the entity ID at that location</p>
-              </div>
-              <div>
-                <p style={{ marginBottom: "5px" }}><strong>🖱️ Cursor Position:</strong></p>
-                <p style={{ fontSize: "12px", lineHeight: "1.4" }}>Gets the coordinates where your cursor is pointing and finds the entity ID</p>
-              </div>
-            </div>
-          </div>
-        </div>
 
 
 
@@ -1048,6 +895,92 @@ export function App() {
             }}>
               ➕ Add New Waypoint
             </h3>
+          
+            
+            {/* Quick Position Tools */}
+            <div style={{ 
+              display: "flex", 
+              gap: "10px", 
+              marginBottom: "20px",
+              alignItems: "center"
+            }}>
+              <div style={{ position: "relative" }}>
+                <button
+                  onClick={getCursorPositionEntity}
+                  disabled={cursorPositionLoading}
+                  title="Get entity ID at cursor position"
+                  style={{ 
+                    width: "40px",
+                    height: "40px",
+                    backgroundColor: cursorPositionLoading ? "#666" : "#2196F3", 
+                    color: "white", 
+                    border: "none", 
+                    borderRadius: "8px",
+                    cursor: cursorPositionLoading ? "not-allowed" : "pointer",
+                    fontSize: "18px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    transition: "all 0.2s ease",
+                    boxShadow: cursorPositionLoading ? "none" : "0 2px 4px rgba(33, 150, 243, 0.3)"
+                  }}
+                >
+                  {cursorPositionLoading ? "⏳" : "🖱️"}
+                </button>
+              </div>
+              
+              <div style={{ position: "relative" }}>
+                <button
+                  onClick={getPlayerPositionEntity}
+                  disabled={playerPositionLoading}
+                  title="Get entity ID at block below player position"
+                  style={{ 
+                    width: "40px",
+                    height: "40px",
+                    backgroundColor: playerPositionLoading ? "#666" : "#4CAF50", 
+                    color: "white", 
+                    border: "none", 
+                    borderRadius: "8px",
+                    cursor: playerPositionLoading ? "not-allowed" : "pointer",
+                    fontSize: "18px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    transition: "all 0.2s ease",
+                    boxShadow: playerPositionLoading ? "none" : "0 2px 4px rgba(76, 175, 80, 0.3)"
+                  }}
+                >
+                  {playerPositionLoading ? "⏳" : "🎯"}
+                </button>
+              </div>
+              
+              <span style={{ color: "#ccc", fontSize: "13px", marginLeft: "10px" }}>
+                Quick tools: Click to auto-fill entity ID
+              </span>
+            </div>
+            
+            {/* Position Results */}
+            {(playerPosition || cursorPosition) && (
+              <div style={{ 
+                backgroundColor: "#2a2a2a", 
+                padding: "12px", 
+                borderRadius: "8px", 
+                marginBottom: "20px",
+                fontSize: "13px", 
+                color: "#ccc",
+                border: "1px solid #4CAF50"
+              }}>
+                {playerPosition && (
+                  <p style={{ marginBottom: "8px" }}><strong>🎯 Player Position:</strong> <code style={{ backgroundColor: "#1a1a1a", color: "#ffffff", padding: "2px 6px", borderRadius: "4px" }}>{playerPosition}</code></p>
+                )}
+                {cursorPosition && (
+                  <p style={{ marginBottom: "8px" }}><strong>🖱️ Cursor Position:</strong> <code style={{ backgroundColor: "#1a1a1a", color: "#ffffff", padding: "2px 6px", borderRadius: "4px" }}>{cursorPosition}</code></p>
+                )}
+                <p style={{ color: "#4CAF50", fontSize: "12px", margin: 0, fontWeight: "500" }}>
+                  ✅ Entity ID automatically added to form below!
+                </p>
+              </div>
+            )}
             
 
            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px", marginBottom: "15px" }}>
