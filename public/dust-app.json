@@ -3,7 +3,7 @@
   "name": "RaidGuild Forge",
   "startUrl": "/",
   "defaultSize": {
-    "width": 800,
-    "height": 1000
+    "width": 1200,
+    "height": 800
   }
 } 
