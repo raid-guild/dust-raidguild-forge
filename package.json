@@ -1,0 +1,36 @@
+{
+    "name": "raidguild-forge-app",
+    "private": true,
+    "version": "0.0.0",
+    "type": "module",
+    "scripts": {
+      "dev": "vite",
+      "build": "tsc && vite build",
+      "lint": "echo 'Linting disabled for now'",
+      "preview": "vite preview"
+    },
+    "dependencies": {
+      "@latticexyz/common": "2.2.23-94cac741be24bb5743f2f36235cc3bb40012417a",
+      "@latticexyz/entrykit": "2.2.23-94cac741be24bb5743f2f36235cc3bb40012417a",
+      "@latticexyz/world": "2.2.23-94cac741be24bb5743f2f36235cc3bb40012417a",
+      "@tanstack/react-query": "^5.74.4",
+      "dustkit": "https://pkg.pr.new/dustproject/dust/dustkit@27f724c",
+      "ox": "^0.6.10",
+      "react": "^18.3.1",
+      "react-dom": "^18.3.1",
+      "viem": "2.30.6",
+      "wagmi": "2.15.5"
+    },
+    "devDependencies": {
+      "@types/react": "^18.3.12",
+      "@types/react-dom": "^18.3.1",
+      "@typescript-eslint/eslint-plugin": "^6.0.0",
+      "@typescript-eslint/parser": "^6.0.0",
+      "@vitejs/plugin-react": "^4.4.0",
+      "eslint": "^8.45.0",
+      "eslint-plugin-react-hooks": "^4.6.0",
+      "eslint-plugin-react-refresh": "^0.4.3",
+      "typescript": "^5.0.2",
+      "vite": "^6.3.0"
+    }
+  } 
