@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@dust/world':
+        specifier: https://pkg.pr.new/dustproject/dust/@dust/world@b324704
+        version: https://pkg.pr.new/dustproject/dust/@dust/world@b324704(@aws-sdk/client-kms@3.859.0)(asn1.js@5.4.1)(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)(zod@3.23.8)
       '@latticexyz/common':
         specifier: 2.2.23-94cac741be24bb5743f2f36235cc3bb40012417a
         version: 2.2.23-94cac741be24bb5743f2f36235cc3bb40012417a(@aws-sdk/client-kms@3.859.0)(asn1.js@5.4.1)(typescript@5.9.2)(viem@2.30.6(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)(zod@3.23.8))(zod@3.23.8)
@@ -308,6 +311,10 @@ packages:
 
   '@dust/world@https://pkg.pr.new/dustproject/dust/@dust/world@27f724c5173fd9f22ffc32f417e9a75c39633904':
     resolution: {tarball: https://pkg.pr.new/dustproject/dust/@dust/world@27f724c5173fd9f22ffc32f417e9a75c39633904}
+    version: 0.0.0
+
+  '@dust/world@https://pkg.pr.new/dustproject/dust/@dust/world@b324704':
+    resolution: {tarball: https://pkg.pr.new/dustproject/dust/@dust/world@b324704}
     version: 0.0.0
 
   '@ecies/ciphers@0.2.4':
@@ -4667,6 +4674,26 @@ snapshots:
       preact: 10.27.0
 
   '@dust/world@https://pkg.pr.new/dustproject/dust/@dust/world@27f724c5173fd9f22ffc32f417e9a75c39633904(@aws-sdk/client-kms@3.859.0)(asn1.js@5.4.1)(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)(zod@3.23.8)':
+    dependencies:
+      '@latticexyz/common': 2.2.22-168c20816258c0b5c387f354283873a7544294ca(@aws-sdk/client-kms@3.859.0)(asn1.js@5.4.1)(typescript@5.9.2)(viem@2.30.6(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)(zod@3.23.8))(zod@3.23.8)
+      '@latticexyz/config': 2.2.22-168c20816258c0b5c387f354283873a7544294ca(@aws-sdk/client-kms@3.859.0)(asn1.js@5.4.1)(typescript@5.9.2)(viem@2.30.6(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)(zod@3.23.8))(zod@3.23.8)
+      '@latticexyz/schema-type': 2.2.22-168c20816258c0b5c387f354283873a7544294ca(typescript@5.9.2)(viem@2.30.6(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)(zod@3.23.8))(zod@3.23.8)
+      '@latticexyz/store': 2.2.22-168c20816258c0b5c387f354283873a7544294ca(@aws-sdk/client-kms@3.859.0)(asn1.js@5.4.1)(typescript@5.9.2)(viem@2.30.6(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)(zod@3.23.8))(zod@3.23.8)
+      '@latticexyz/world': 2.2.22-168c20816258c0b5c387f354283873a7544294ca(@aws-sdk/client-kms@3.859.0)(asn1.js@5.4.1)(typescript@5.9.2)(viem@2.30.6(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)(zod@3.23.8))(zod@3.23.8)
+      '@latticexyz/world-consumer': 2.2.22-168c20816258c0b5c387f354283873a7544294ca(@aws-sdk/client-kms@3.859.0)(asn1.js@5.4.1)(typescript@5.9.2)(viem@2.30.6(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)(zod@3.23.8))(zod@3.23.8)
+      '@openzeppelin/contracts': 4.9.6
+      solady: 0.1.24
+      viem: 2.30.6(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)(zod@3.23.8)
+    transitivePeerDependencies:
+      - '@aws-sdk/client-kms'
+      - asn1.js
+      - bufferutil
+      - supports-color
+      - typescript
+      - utf-8-validate
+      - zod
+
+  '@dust/world@https://pkg.pr.new/dustproject/dust/@dust/world@b324704(@aws-sdk/client-kms@3.859.0)(asn1.js@5.4.1)(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)(zod@3.23.8)':
     dependencies:
       '@latticexyz/common': 2.2.22-168c20816258c0b5c387f354283873a7544294ca(@aws-sdk/client-kms@3.859.0)(asn1.js@5.4.1)(typescript@5.9.2)(viem@2.30.6(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)(zod@3.23.8))(zod@3.23.8)
       '@latticexyz/config': 2.2.22-168c20816258c0b5c387f354283873a7544294ca(@aws-sdk/client-kms@3.859.0)(asn1.js@5.4.1)(typescript@5.9.2)(viem@2.30.6(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)(zod@3.23.8))(zod@3.23.8)

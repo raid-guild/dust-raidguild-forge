@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { connectDustClient } from "dustkit/internal";
+import { encodeBlock } from "@dust/world/internal";
 import { useState, useEffect } from "react";
 
 interface Waypoint {
@@ -262,6 +263,9 @@ export const WaypointsTab = () => {
     link.click();
     URL.revokeObjectURL(url);
   };
+  // DEPRECATED: Old implementation using explorer API - kept for reference
+  /*
+  
 
   // Helper function to get entity at position with fallback to terrain
   const getEntityAtPositionWithFallback = async (
@@ -393,6 +397,21 @@ export const WaypointsTab = () => {
     console.log("🏔️ Found natural terrain block");
     return { entityId: terrainEntityId, type: "natural" };
   };
+    */
+
+  // NEW: Simple function that uses encodeBlock utility only
+  const getEntityAtPositionWithEncodeBlock = (x: number, y: number, z: number) => {
+    console.log(`🔍 Getting entity at position using encodeBlock: ${x}, ${y}, ${z}`);
+    
+    // Use encodeBlock utility to encode the block position into entity ID
+    const entityId = encodeBlock([x, y, z]);
+    console.log(`🔧 Generated entity ID using encodeBlock: ${entityId}`);
+    console.log(`🔧 Coordinates: x=${x}, y=${y}, z=${z}`);
+    
+    return { entityId, type: "block" };
+  };
+
+
 
   const getPlayerPositionEntity = async () => {
     setPlayerPositionLoading(true);
@@ -419,7 +438,7 @@ export const WaypointsTab = () => {
         );
 
         // Use the new fallback function
-        const { entityId, type } = await getEntityAtPositionWithFallback(
+        const { entityId, type } = await getEntityAtPositionWithEncodeBlock(
           roundedX,
           roundedY,
           roundedZ
@@ -467,7 +486,7 @@ export const WaypointsTab = () => {
         );
 
         // Use the new fallback function
-        const { entityId, type } = await getEntityAtPositionWithFallback(
+        const { entityId, type } = await getEntityAtPositionWithEncodeBlock(
           roundedX,
           roundedY,
           roundedZ
