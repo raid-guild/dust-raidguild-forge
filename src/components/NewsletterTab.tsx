@@ -21,7 +21,7 @@ export const NewsletterTab = () => {
             textShadow: "2px 2px 4px rgba(0,0,0,0.5)",
           }}
         >
-          📰 Dust Weekly
+          📰 Daily DUST
         </h2>
       </div>
       <p style={{ color: "#888", marginBottom: "20px" }}>
@@ -59,7 +59,7 @@ export const NewsletterTab = () => {
             margin: "0 auto",
           }}
         >
-          The Dust Weekly newsletter is currently in development. Stay tuned for
+          The Daily Dust newsletter is currently in development. Stay tuned for
           weekly updates, community highlights, and the latest news from the
           Dust universe!
         </p>

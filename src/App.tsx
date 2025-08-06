@@ -284,7 +284,7 @@ export function App() {
             borderRadius: "8px 8px 0 0",
           }}
         >
-          📰 Dust Weekly
+          📰 Daily DUST
         </button>
       </div>
 
