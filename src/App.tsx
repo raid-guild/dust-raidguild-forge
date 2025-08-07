@@ -6,8 +6,9 @@ import { WaypointsTab } from "./components/WaypointsTab";
 import { ForcefieldTab } from "./components/ForcefieldTab";
 import { SignsTab } from "./components/SignsTab";
 import { NewsletterTab } from "./components/NewsletterTab";
+import { AboutTab } from "./components/AboutTab";
 
-type TabType = "waypoints" | "forcefield" | "signs" | "newsletter";
+type TabType = "waypoints" | "forcefield" | "signs" | "newsletter" | "about";
 
 export function App() {
   const dustClient = useQuery({
@@ -286,6 +287,18 @@ export function App() {
         >
           📰 Daily DUST
         </button>
+        <button
+          onClick={() => setActiveTab("about")}
+          style={{
+            padding: "10px 20px",
+            backgroundColor: activeTab === "about" ? "#e91e63" : "#333",
+            color: "white",
+            border: "none",
+            borderRadius: "8px 8px 0 0",
+          }}
+        >
+          ℹ️ About
+        </button>
       </div>
 
       {/* Waypoint Manager Tab */}
@@ -313,6 +326,9 @@ export function App() {
 
       {/* Newsletter Tab */}
       {activeTab === "newsletter" && <NewsletterTab />}
+
+      {/* About Tab */}
+      {activeTab === "about" && <AboutTab />}
     </div>
   );
 }
